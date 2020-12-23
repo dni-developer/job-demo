@@ -1,4 +1,4 @@
-package net.dni.job.item;
+package net.dni.job.writer;
 
 import net.dni.job.entity.Employee;
 import net.dni.job.repository.EmployeeRepositoryImpl;
@@ -16,7 +16,7 @@ public class EmployeeItemWriter<T> implements ItemWriter<T>, InitializingBean {
     EmployeeRepositoryImpl employeeRepositoryImpl;
 
     @Override
-    public void write(List<? extends T> items) throws Exception {
+    public void write(List<? extends T> items) {
         for (T item : items) {
             if (item instanceof Employee) {
                 employeeRepositoryImpl.save((Employee) item);
@@ -27,7 +27,7 @@ public class EmployeeItemWriter<T> implements ItemWriter<T>, InitializingBean {
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
 
     }
 

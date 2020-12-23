@@ -24,7 +24,7 @@ public class JobCompletionNotificationListener extends JobExecutionListenerSuppo
     public void afterJob(JobExecution jobExecution) {
         log.info("finishing - [{}]", jobExecution);
         if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
-            employeeRepositoryImpl.findAll().forEach(i -> log.info("<" + i + ">"));
+            employeeRepositoryImpl.findAll().forEach(i -> log.info("<{}>", i));
         }
     }
 }
