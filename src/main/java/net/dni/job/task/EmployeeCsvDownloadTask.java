@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+
 @Log4j2
 @Component
 public class EmployeeCsvDownloadTask implements Tasklet {
@@ -23,7 +25,13 @@ public class EmployeeCsvDownloadTask implements Tasklet {
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
-        employeeService.downloadEmployeeCsv(resource);
+        File file = employeeService.downloadEmployeeCsv(resource);
+        chunkContext
+                .getStepContext()
+                .getStepExecution()
+                .getJobExecution()
+                .getExecutionContext()
+                .put("input.file.name", file.getAbsolutePath());
         log.info("execute task {} {}", contribution, chunkContext);
         return RepeatStatus.FINISHED;
     }

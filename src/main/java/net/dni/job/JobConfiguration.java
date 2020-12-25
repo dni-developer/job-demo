@@ -11,16 +11,20 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.function.FunctionItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.FileUrlResource;
 import org.springframework.core.io.Resource;
 import org.springframework.web.client.RestTemplate;
@@ -44,12 +48,12 @@ public class JobConfiguration {
     }
 
     @Bean
-    public Job importEmployeeCsvJob(
+    public Job downloadEmployeeCsvFromSampleJob(
             JobCompletionNotificationListener listener,
             Step employeeCsvDownloadStep,
             Step importEmployeeFromCsvToDatabaseStep,
             Step employeeCsvDeleteStep) {
-        return jobBuilderFactory.get("importEmployeeCsvJob")
+        return jobBuilderFactory.get("downloadEmployeeCsvFromSampleJob")
                 .incrementer(new RunIdIncrementer())
                 .listener(listener)
                 .flow(employeeCsvDownloadStep)
@@ -75,22 +79,23 @@ public class JobConfiguration {
 
     @Bean
     public Step importEmployeeFromCsvToDatabaseStep(
-            Resource downloadCsvFileResource,
+            ItemReader<EmployeeCsvItem> employeeCSVFlatFileItemReader,
             ItemWriter<Employee> employeeItemWriter,
             ItemProcessor<EmployeeCsvItem, Employee> employeeCsvItemProcessor) {
         return stepBuilderFactory.get("importEmployeeFromCsvToDatabaseStep")
                 .<EmployeeCsvItem, Employee>chunk(1)
-                .reader(employeeCSVFlatFileItemReader(downloadCsvFileResource))
+                .reader(employeeCSVFlatFileItemReader)
                 .processor(employeeCsvItemProcessor)
                 .writer(employeeItemWriter)
                 .build();
     }
 
+    @StepScope
     @Bean
-    public ItemReader<EmployeeCsvItem> employeeCSVFlatFileItemReader(Resource resource) {
+    public FlatFileItemReader<EmployeeCsvItem> employeeCSVFlatFileItemReader(@Value("#{jobExecutionContext['input.file.name']}") String name) {
         return new FlatFileItemReaderBuilder<EmployeeCsvItem>()
                 .name("employeeCSVFlatFileItemReader")
-                .resource(resource)
+                .resource(new FileSystemResource(name))
                 .delimited()
                 .names("firstName", "lastName", "position")
                 .fieldSetMapper(new BeanWrapperFieldSetMapper<>() {{

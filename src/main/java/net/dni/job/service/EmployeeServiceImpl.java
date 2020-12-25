@@ -19,7 +19,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     RestTemplate restTemplate;
 
     @Override
-    public void downloadEmployeeCsv(Resource resource) {
+    public File downloadEmployeeCsv(Resource resource) {
         File file = restTemplate.execute("http://localhost:8080/sample", HttpMethod.GET, null, clientHttpResponse -> {
             File ret = resource.getFile();
             /*todo:manipulate stream*/
@@ -27,5 +27,6 @@ public class EmployeeServiceImpl implements EmployeeService {
             return ret;
         });
         log.info("download - [{}]", file);
+        return file;
     }
 }
